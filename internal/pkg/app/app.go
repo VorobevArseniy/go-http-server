@@ -17,8 +17,13 @@ const (
 type App struct {
 	e   *endpoint.Endpoint
 	s   *service.Service
+	m   *middleware.Middleware
 	r   *http.ServeMux
 	srv *http.Server
+}
+
+type Mw interface {
+	CreateStack()
 }
 
 func New() (*App, error) {
@@ -28,10 +33,12 @@ func New() (*App, error) {
 
 	a.e = endpoint.New(a.s)
 
+	a.m = middleware.New()
+
 	a.r = http.NewServeMux()
 
-	stack := middleware.CreateStack(
-		middleware.Logger,
+	stack := a.m.CreateStack(
+		a.m.Logger,
 	)
 
 	a.srv = &http.Server{

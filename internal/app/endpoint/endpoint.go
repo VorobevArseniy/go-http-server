@@ -23,11 +23,11 @@ func New(s Service) *Endpoint {
 }
 
 func (e *Endpoint) Status(w http.ResponseWriter, r *http.Request) {
-
+	m := middleware.New()
 	n := r.PathValue("name")
 	c := e.s.RandomCoupon()
 
-	role, ok := r.Context().Value(middleware.UserRole).(string)
+	role, ok := r.Context().Value(m.UserRole).(string)
 	if !ok {
 		log.Println("Invalid user role")
 	}

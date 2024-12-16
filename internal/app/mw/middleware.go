@@ -12,7 +12,13 @@ const (
 	roleAdmin = "admin"
 )
 
-type Middleware func(http.Handler) http.Handler
+type Middleware struct{ UserRole string }
+
+func New() *Middleware {
+	return &Middleware{UserRole: UserRole}
+}
+
+type mw func(http.Handler) http.Handler
 
 type wrapperWriter struct {
 	http.ResponseWriter
@@ -24,7 +30,7 @@ func (w *wrapperWriter) WriteHeader(statusCode int) {
 	w.statusCode = statusCode
 }
 
-func CreateStack(xs ...Middleware) Middleware {
+func (m *Middleware) CreateStack(xs ...mw) mw {
 	return func(next http.Handler) http.Handler {
 		for i := len(xs) - 1; i >= 0; i-- {
 			x := xs[i]
@@ -34,7 +40,7 @@ func CreateStack(xs ...Middleware) Middleware {
 	}
 }
 
-func Logger(next http.Handler) http.Handler {
+func (m *Middleware) Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -42,7 +48,6 @@ func Logger(next http.Handler) http.Handler {
 			ResponseWriter: w,
 			statusCode:     http.StatusOK,
 		}
-
 		role := r.Header.Get("role")
 
 		log.Println(wrapped.statusCode, r.Method, r.URL.Path, role, time.Since(start))
